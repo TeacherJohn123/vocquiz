@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>英文單字拼寫測驗</title>
+<style>
+:root{--bg:#faf7f2;--card:#fff;--ink:#2b2a33;--mute:#7a7886;--line:#e6e0d6;--accent:#4f6bed;--accent-ink:#fff;--ok:#2e9e5b;--bad:#d64545;--okbg:#e5f5ec;--badbg:#fbe9e9;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17171c;--card:#22222a;--ink:#f0eff5;--mute:#9a98a8;--line:#34343f;--accent:#7b93ff;--accent-ink:#10101a;--ok:#5fd08d;--bad:#ff7a7a;--okbg:#1b3327;--badbg:#3a2224;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#17171c;--card:#22222a;--ink:#f0eff5;--mute:#9a98a8;--line:#34343f;--accent:#7b93ff;--accent-ink:#10101a;--ok:#5fd08d;--bad:#ff7a7a;--okbg:#1b3327;--badbg:#3a2224;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;min-height:100vh;display:flex;justify-content:center;padding:20px 16px}
+.wrap{width:100%;max-width:560px}
+h1{font-size:22px;margin:8px 0 4px;text-align:center}
+.sub{color:var(--mute);text-align:center;font-size:14px;margin-bottom:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px}
+.hide{display:none!important}
+label{font-size:14px;color:var(--mute);display:block;margin:14px 0 6px}
+.opts{display:flex;gap:8px;flex-wrap:wrap}
+.opt{flex:1;min-width:70px;padding:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;font-size:15px;cursor:pointer}
+.opt.on{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
+button.main{width:100%;margin-top:20px;padding:13px;border:0;border-radius:12px;background:var(--accent);color:var(--accent-ink);font-size:17px;font-weight:600;cursor:pointer}
+button.ghost{background:none;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:9px 14px;font-size:14px;cursor:pointer}
+textarea{width:100%;min-height:90px;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--bg);color:var(--ink);font-size:14px;font-family:inherit}
+.top{display:flex;justify-content:space-between;font-size:14px;color:var(--mute);margin-bottom:10px}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-bottom:22px}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+.meaning{font-size:30px;font-weight:700;text-align:center;margin:6px 0 4px}
+.pos{text-align:center;color:var(--mute);font-size:14px;min-height:20px}
+.shape{text-align:center;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:26px;letter-spacing:6px;margin:18px 0;word-break:break-all}
+input#ans{width:100%;padding:14px;font-size:22px;text-align:center;border:2px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);font-family:ui-monospace,Menlo,Consolas,monospace}
+input#ans:focus{outline:none;border-color:var(--accent)}
+input#ans.ok{border-color:var(--ok);background:var(--okbg)}
+input#ans.bad{border-color:var(--bad);background:var(--badbg)}
+.fb{min-height:48px;text-align:center;margin-top:12px;font-size:16px}
+.fb.ok{color:var(--ok)}.fb.bad{color:var(--bad)}
+.row{display:flex;gap:8px;margin-top:6px}
+.row button{flex:1}
+.score{font-size:48px;font-weight:800;text-align:center;margin:6px 0}
+.wrong{margin:12px 0 0;padding:0;list-style:none}
+.wrong li{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:15px}
+.wrong b{font-family:ui-monospace,Menlo,Consolas,monospace}
+.best{text-align:center;color:var(--mute);font-size:13px;margin-top:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📝 英文單字拼寫測驗</h1>
+  <div class="sub">看中文意思，輸入正確的英文單字</div>
+
+  <div id="start" class="card">
+    <label>題數</label>
+    <div class="opts" id="countOpts">
+      <button class="opt" data-v="10">10 題</button>
+      <button class="opt on" data-v="20">20 題</button>
+      <button class="opt" data-v="0">全部</button>
+    </div>
+    <label>題庫來源</label>
+    <div class="opts" id="srcOpts">
+      <button class="opt on" data-v="0">內建題庫</button>
+      <button class="opt" data-v="1">我的題庫</button>
+    </div>
+    <label>我的題目（每行一個：英文,中文）</label>
+    <textarea id="custom" placeholder="apple,蘋果&#10;library,圖書館"></textarea>
+    <div class="row">
+      <button class="ghost" id="saveBtn">💾 儲存題目</button>
+      <button class="ghost" id="clearBtn">🗑 清除</button>
+    </div>
+    <div class="best" id="saveMsg"></div>
+    <div class="best" id="best"></div>
+    <button class="main" id="startBtn">開始測驗</button>
+  </div>
+
+  <div id="quiz" class="card hide">
+    <div class="top"><span id="prog">1 / 20</span><span id="sc">答對 0</span></div>
+    <div class="bar"><i id="barI"></i></div>
+    <div class="meaning" id="mean"></div>
+    <div class="pos" id="pos"></div>
+    <input id="ans" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="輸入英文單字">
+    <div class="fb" id="fb"></div>
+    <div class="row">
+      <button class="ghost" id="skipBtn">跳過</button>
+    </div>
+    <button class="main" id="okBtn">送出（Enter）</button>
+  </div>
+
+  <div id="result" class="card hide">
+    <div class="sub" style="margin:0">測驗完成</div>
+    <div class="score" id="final"></div>
+    <div class="best" id="finalSub"></div>
+    <ul class="wrong" id="wrongList"></ul>
+    <button class="main" id="againBtn">再來一次（重新隨機）</button>
+  </div>
+</div>
+
+<script>
+const BANK=[
+["apple","蘋果","n."],["banana","香蕉","n."],["orange","柳橙","n."],["watermelon","西瓜","n."],["strawberry","草莓","n."],
+["school","學校","n."],["teacher","老師","n."],["student","學生","n."],["library","圖書館","n."],["classroom","教室","n."],
+["homework","家庭作業","n."],["notebook","筆記本","n."],["pencil","鉛筆","n."],["dictionary","字典","n."],["computer","電腦","n."],
+["family","家庭","n."],["brother","兄弟","n."],["sister","姊妹","n."],["grandmother","祖母；外婆","n."],["neighbor","鄰居","n."],
+["breakfast","早餐","n."],["lunch","午餐","n."],["dinner","晚餐","n."],["vegetable","蔬菜","n."],["chicken","雞肉","n."],
+["weather","天氣","n."],["rainy","下雨的","adj."],["sunny","晴朗的","adj."],["windy","有風的","adj."],["cloudy","多雲的","adj."],
+["happy","快樂的","adj."],["angry","生氣的","adj."],["tired","疲倦的","adj."],["hungry","飢餓的","adj."],["beautiful","美麗的","adj."],
+["careful","小心的","adj."],["difficult","困難的","adj."],["important","重要的","adj."],["interesting","有趣的","adj."],["dangerous","危險的","adj."],
+["run","跑步","v."],["swim","游泳","v."],["study","讀書；研究","v."],["remember","記得","v."],["forget","忘記","v."],
+["borrow","借入","v."],["choose","選擇","v."],["decide","決定","v."],["explain","解釋","v."],["practice","練習","v."],
+["airport","機場","n."],["station","車站","n."],["hospital","醫院","n."],["restaurant","餐廳","n."],["supermarket","超級市場","n."],
+["yesterday","昨天","adv."],["tomorrow","明天","adv."],["always","總是","adv."],["sometimes","有時候","adv."],["usually","通常","adv."],
+["Monday","星期一","n."],["Saturday","星期六","n."],["January","一月","n."],["September","九月","n."],["birthday","生日","n."],
+["doctor","醫生","n."],["farmer","農夫","n."],["policeman","警察","n."],["engineer","工程師","n."],["musician","音樂家","n."],
+["mountain","山","n."],["river","河流","n."],["island","島嶼","n."],["forest","森林","n."],["ocean","海洋","n."],
+["envelope","信封","n."],["umbrella","雨傘","n."],["bicycle","腳踏車","n."],["elephant","大象","n."],["kangaroo","袋鼠","n."]
+];
+const $=id=>document.getElementById(id);
+let count=20,hint=1,deck=[],i=0,right=0,wrong=[],locked=false,usedHint=false,revealed=0;
+
+function shuffle(a){a=a.slice();for(let k=a.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[a[k],a[j]]=[a[j],a[k]]}return a}
+function norm(s){return s.trim().toLowerCase()}
+function bestGet(){try{return +localStorage.getItem("wq_best")||0}catch(e){return 0}}
+function bestSet(v){try{localStorage.setItem("wq_best",String(v))}catch(e){}}
+function showBest(){const b=bestGet();$("best").textContent=b?("最佳紀錄：答對率 "+b+"%"):""}
+showBest();
+
+function bind(id,key){$(id).addEventListener("click",e=>{const b=e.target.closest(".opt");if(!b)return;[...$(id).children].forEach(c=>c.classList.remove("on"));b.classList.add("on");key(+b.dataset.v)})}
+bind("countOpts",v=>count=v);
+let src=0;
+bind("srcOpts",v=>src=v);
+function setSrc(v){src=v;[...$("srcOpts").children].forEach(c=>c.classList.toggle("on",+c.dataset.v===v))}
+function loadCustom(){try{return localStorage.getItem("wq_custom")||""}catch(e){return""}}
+function saveCustom(){
+  const n=parseCustom().length;
+  try{localStorage.setItem("wq_custom",$("custom").value);$("saveMsg").textContent=n?("已儲存 "+n+" 題"):"已清空儲存的題目"}
+  catch(e){$("saveMsg").textContent="無法儲存（瀏覽器不允許）"}
+}
+$("saveBtn").onclick=()=>{saveCustom();if(parseCustom().length)setSrc(1)};
+$("clearBtn").onclick=()=>{$("custom").value="";saveCustom();setSrc(0)};
+$("custom").value=loadCustom();
+if(parseCustom().length){setSrc(1);$("saveMsg").textContent="已載入你儲存的 "+parseCustom().length+" 題"}
+
+function parseCustom(){
+  const out=[];
+  $("custom").value.split(/\n/).forEach(l=>{
+    const m=l.split(/[,，\t]/);
+    if(m.length>=2&&m[0].trim()&&m[1].trim())out.push([m[0].trim(),m.slice(1).join(",").trim(),""]);
+  });
+  return out;
+}
+function start(){
+  const custom=parseCustom();
+  if(src===1&&!custom.length){$("saveMsg").textContent="請先輸入題目，或改用內建題庫";return}
+  if(src===1)saveCustom();
+  let pool=(src===1)?custom:BANK;
+  deck=shuffle(pool);
+  if(count>0&&count<deck.length)deck=deck.slice(0,count);
+  i=0;right=0;wrong=[];
+  $("start").classList.add("hide");$("result").classList.add("hide");$("quiz").classList.remove("hide");
+  render();
+}
+function shapeText(w){
+  if(!hint)return"";
+  return w.split("").map((c,k)=>k<revealed?c:(/[a-z]/i.test(c)?"_":c)).join(" ");
+}
+function render(){
+  locked=false;usedHint=false;revealed=0;
+  const [w,m,p]=deck[i];
+  $("prog").textContent=(i+1)+" / "+deck.length;
+  $("sc").textContent="答對 "+right;
+  $("barI").style.width=(i/deck.length*100)+"%";
+  $("mean").textContent=m;$("pos").textContent=p;
+  const a=$("ans");a.value="";a.className="";a.disabled=false;a.focus();
+  $("fb").textContent="";$("fb").className="fb";
+  $("okBtn").textContent="送出（Enter）";
+}
+function submit(){
+  if(locked){next();return}
+  const w=deck[i][0],v=$("ans").value;
+  if(!v.trim())return;
+  locked=true;$("ans").disabled=true;
+  if(norm(v)===norm(w)){
+    right++;
+    $("ans").className="ok";$("fb").className="fb ok";
+    $("fb").textContent="✔ 答對了！";
+  }else{
+    wrong.push([w,deck[i][1],v.trim()]);
+    $("ans").className="bad";$("fb").className="fb bad";
+    $("fb").innerHTML="✘ 正確答案：<b></b>";
+    $("fb").querySelector("b").textContent=w;
+  }
+  $("sc").textContent="答對 "+right;
+  $("okBtn").textContent=(i+1>=deck.length)?"查看結果":"下一題（Enter）";
+}
+function next(){i++;if(i>=deck.length)finish();else render()}
+function skip(){
+  if(locked){next();return}
+  locked=true;$("ans").disabled=true;
+  wrong.push([deck[i][0],deck[i][1],"（跳過）"]);
+  $("fb").className="fb bad";$("fb").innerHTML="正確答案：<b></b>";
+  $("fb").querySelector("b").textContent=deck[i][0];
+  $("okBtn").textContent=(i+1>=deck.length)?"查看結果":"下一題（Enter）";
+}
+function hintOne(){
+  if(locked)return;
+  const w=deck[i][0];
+  if(revealed<w.length-1){revealed++;usedHint=true;$("shape").classList.remove("hide");$("shape").textContent=w.split("").map((c,k)=>k<revealed?c:(/[a-z]/i.test(c)?"_":c)).join(" ")}
+  $("ans").focus();
+}
+function finish(){
+  $("quiz").classList.add("hide");$("result").classList.remove("hide");
+  const pct=Math.round(right/deck.length*100);
+  $("final").textContent=right+" / "+deck.length;
+  let msg="答對率 "+pct+"%";
+  if(pct>bestGet()&&deck.length>=10){bestSet(pct);msg+="　🎉 新紀錄！"}
+  $("finalSub").textContent=msg;
+  const ul=$("wrongList");ul.innerHTML="";
+  if(wrong.length){
+    const h=document.createElement("li");h.style.fontWeight="600";h.textContent="答錯的單字";ul.appendChild(h);
+    wrong.forEach(([w,m,u])=>{
+      const li=document.createElement("li");
+      const l=document.createElement("span");l.textContent=m+"　你的答案：";
+      const s=document.createElement("small");s.style.color="var(--mute)";s.textContent=u;l.appendChild(s);
+      const r=document.createElement("b");r.textContent=w;
+      li.appendChild(l);li.appendChild(r);ul.appendChild(li);
+    });
+  }else{const li=document.createElement("li");li.textContent="全部答對，太厲害了！";ul.appendChild(li)}
+  showBest();
+}
+$("startBtn").onclick=start;
+$("againBtn").onclick=()=>{$("result").classList.add("hide");$("start").classList.remove("hide");showBest()};
+$("okBtn").onclick=submit;$("skipBtn").onclick=skip;
+document.addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&!$("quiz").classList.contains("hide")){e.preventDefault();submit()}
+});
+</script>
+</body>
+</html>
